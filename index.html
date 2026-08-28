@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TAKS - KAKS 3D Şehir Simülasyonu</title>
+    <title>TAKS-KAKS Mekansallaştırma Simülasyonu</title>
     <style>
         :root {
             --primary: #3b82f6;
@@ -33,8 +33,21 @@
             gap: 15px; z-index: 10; overflow-y: auto;
         }
 
-        h2 { margin-top: 0; color: var(--text-dark); font-size: 1.2rem; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; margin-bottom: 5px;}
+        .panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; margin-bottom: 5px;
+        }
+
+        h2 { margin: 0; color: var(--text-dark); font-size: 1.1rem; line-height: 1.3;}
         
+        /* DİL BUTONU */
+        .btn-lang {
+            background: #1f2937; color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; font-weight: bold; cursor: pointer;
+            transition: background 0.2s; font-size: 0.85rem; flex-shrink: 0; margin-left: 10px;
+        }
+        .btn-lang:hover { background: #374151; }
+
         /* POV BUTONU */
         .btn-pov {
             background: #10b981; color: white; border: none; padding: 14px;
@@ -70,7 +83,7 @@
             background: rgba(255, 255, 255, 0.7); border: 2px solid rgba(0,0,0,0.2);
             border-radius: 12px; font-weight: bold; font-size: 18px; user-select: none;
             display: flex; align-items: center; justify-content: center; color: #333;
-            touch-action: none; /* Tarayıcının butondaki parmak hareketini algılamasını tamamen iptal eder */
+            touch-action: none; 
         }
         .dpad-btn:active { background: rgba(200, 200, 200, 0.9); }
         #btnW { grid-column: 2; grid-row: 1; }
@@ -86,8 +99,8 @@
             .info-box { display: none; } 
             .dpad-container { 
                 display: grid; 
-                bottom: 40px; /* OS alt menüsünden uzak */
-                left: 40px; /* Kenar kaydırma jestinden (geri dön) uzak */
+                bottom: 40px; 
+                left: 40px; 
                 grid-template-columns: 55px 55px 55px;
                 grid-template-rows: 55px 55px;
                 gap: 10px;
@@ -142,117 +155,42 @@
         #floorsContainer { width: 100%; height: 100%; position: absolute; transform-style: preserve-3d; }
 
         .plot::after {
-            content: "Parsel Sınırı"; position: absolute; bottom: -30px; left: -20px;
+            content: attr(data-label); position: absolute; bottom: -30px; left: -20px;
             transform-origin: center center;
             transform: translateZ(5px) rotateZ(calc(-1 * var(--cam-z))) rotateX(calc(-1 * var(--cam-x))) scale(var(--cam-inv-scale));
             font-weight: bold; color: #166534; font-size: 14px; pointer-events: none;
         }
 
         /* BİNA KATLARI VE DUVARLAR */
-        .floor {
-            position: absolute; 
-            transition: all 0.4s ease; transform-style: preserve-3d;
-            --floor-h: 33px; 
-        }
+        .floor { position: absolute; transition: all 0.4s ease; transform-style: preserve-3d; --floor-h: 33px; }
+        .f-ceiling { position: absolute; width: 100%; height: 100%; top: 0; left: 0; background-color: #cbd5e1; border: 1px solid rgba(0,0,0,0.1); box-sizing: border-box; transform-style: preserve-3d; }
+        .f-wall { position: absolute; height: var(--floor-h); width: 100%; bottom: 0; left: 0; transform-origin: bottom; box-sizing: border-box; border: 1px solid rgba(0,0,0,0.1); display: flex; align-items: flex-end; justify-content: space-evenly; padding-bottom: 9px; }
         
-        .f-ceiling {
-            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
-            background-color: #cbd5e1; border: 1px solid rgba(0,0,0,0.1); box-sizing: border-box;
-            transform-style: preserve-3d;
-        }
+        .type-betonarme .w-front { background-color: #e2e8f0; } .type-betonarme .w-back  { background-color: #cbd5e1; } .type-betonarme .w-left  { background-color: #94a3b8; } .type-betonarme .w-right { background-color: #e2e8f0; }
         
-        .f-wall { 
-            position: absolute; height: var(--floor-h); width: 100%; bottom: 0; left: 0;
-            transform-origin: bottom; box-sizing: border-box; border: 1px solid rgba(0,0,0,0.1);
-            display: flex; align-items: flex-end; justify-content: space-evenly;
-            padding-bottom: 9px; 
-        }
-        
-        /* BİNA TİPLERİ VE RENKLERİ & DOKULARI */
-        .type-betonarme .w-front { background-color: #e2e8f0; }
-        .type-betonarme .w-back  { background-color: #cbd5e1; }
-        .type-betonarme .w-left  { background-color: #94a3b8; }
-        .type-betonarme .w-right { background-color: #e2e8f0; }
+        .type-yigma .f-wall { background-color: #bfaea3; background-image: linear-gradient(rgba(60, 50, 40, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(60, 50, 40, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(60, 50, 40, 0.4) 1px, transparent 1px); background-size: 100% 12px, 24px 24px, 24px 24px; background-position: 0 0, 0 0, 12px 12px; box-shadow: inset 0 0 20px rgba(0,0,0,0.15); }
+        .type-yigma .w-front { filter: brightness(1.05); } .type-yigma .w-back  { filter: brightness(0.85); } .type-yigma .w-left  { filter: brightness(0.95); } .type-yigma .w-right { filter: brightness(0.90); }
 
-        .type-yigma .f-wall { 
-            background-color: #bfaea3; 
-            background-image:
-                linear-gradient(rgba(60, 50, 40, 0.4) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(60, 50, 40, 0.4) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(60, 50, 40, 0.4) 1px, transparent 1px);
-            background-size: 100% 12px, 24px 24px, 24px 24px;
-            background-position: 0 0, 0 0, 12px 12px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.15);
-        }
-        .type-yigma .w-front { filter: brightness(1.05); }
-        .type-yigma .w-back  { filter: brightness(0.85); }
-        .type-yigma .w-left  { filter: brightness(0.95); }
-        .type-yigma .w-right { filter: brightness(0.90); }
+        .type-ahsap .f-wall { background-color: #634326; background-image: repeating-linear-gradient(to bottom, transparent, transparent 7px, rgba(0,0,0,0.4) 7px, rgba(0,0,0,0.5) 8px); }
+        .type-ahsap .w-front { background-color: #7b5533; } .type-ahsap .w-back  { background-color: #4a311b; } .type-ahsap .w-left  { background-color: #634326; } .type-ahsap .w-right { background-color: #5c3c21; }
 
-        .type-ahsap .f-wall {
-            background-color: #634326; 
-            background-image: repeating-linear-gradient(to bottom, transparent, transparent 7px, rgba(0,0,0,0.4) 7px, rgba(0,0,0,0.5) 8px);
-        }
-        .type-ahsap .w-front { background-color: #7b5533; }
-        .type-ahsap .w-back  { background-color: #4a311b; }
-        .type-ahsap .w-left  { background-color: #634326; }
-        .type-ahsap .w-right { background-color: #5c3c21; }
+        /* PENCERE & KAPI */
+        .win { width: 14px; height: 15px; background-color: #bae6fd; background-image: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.7) 21%, rgba(255,255,255,0.7) 28%, transparent 29%), linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.4) 41%, rgba(255,255,255,0.4) 44%, transparent 45%); border: 2px solid; border-radius: 1px; position: relative; box-shadow: inset 0 0 6px rgba(0,0,0,0.4); }
+        .win::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); }
+        .type-betonarme .win { border-color: #f8fafc; background-color: #0f172a; } .type-betonarme .win::after { background-color: #f8fafc; }
+        .type-ahsap .win { border-color: #451a03; } .type-ahsap .win::after { background-color: #451a03; }
+        .type-yigma .win { border-color: #475569; border-radius: 6px 6px 0 0; } .type-yigma .win::after { background-color: #475569; }
 
-        /* SİMETRİK KONUT PENCERESİ */
-        .win {
-            width: 14px; height: 15px; 
-            background-color: #bae6fd; 
-            background-image: 
-                linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.7) 21%, rgba(255,255,255,0.7) 28%, transparent 29%),
-                linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.4) 41%, rgba(255,255,255,0.4) 44%, transparent 45%);
-            border: 2px solid; 
-            border-radius: 1px; position: relative; box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
-        }
-        .win::after { 
-            content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
-            width: 2px; transform: translateX(-50%);
-        }
-        
-        .type-betonarme .win { border-color: #f8fafc; background-color: #0f172a; }
-        .type-betonarme .win::after { background-color: #f8fafc; }
-        .type-ahsap .win { border-color: #451a03; }
-        .type-ahsap .win::after { background-color: #451a03; }
-        .type-yigma .win { border-color: #475569; border-radius: 6px 6px 0 0; }
-        .type-yigma .win::after { background-color: #475569; }
-
-        /* KAPI STİLİ */
-        .door {
-            width: 14px; height: 22px; 
-            margin-bottom: -9px; 
-            position: relative; box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
-            border-bottom: none !important;
-            box-sizing: border-box;
-        }
+        .door { width: 14px; height: 22px; margin-bottom: -9px; position: relative; box-shadow: inset 0 0 4px rgba(0,0,0,0.5); border-bottom: none !important; box-sizing: border-box; }
         .door::after { content: ''; position: absolute; }
-        .type-betonarme .door { background: #bae6fd; border: 2px solid #1e293b; }
-        .type-betonarme .door::after { width: 2px; height: 10px; background: #94a3b8; right: 2px; top: 40%; }
-        .type-ahsap .door { 
-            background: #451a03; border: 2px solid #290f02;
-            background-image: repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px);
-        }
-        .type-ahsap .door::after { width: 3px; height: 3px; background: #fbbf24; border-radius: 50%; right: 2px; top: 50%; }
-        .type-yigma .door { 
-            background: #78350f; border: 2px solid #475569; border-radius: 8px 8px 0 0;
-            box-shadow: 0 0 0 2.5px #334155, inset 0 0 6px rgba(0,0,0,0.5); margin-top: 2.5px;
-        }
-        .type-yigma .door::after { width: 3px; height: 6px; background: #1e293b; right: 2px; top: 50%; border-radius: 1px;}
+        .type-betonarme .door { background: #bae6fd; border: 2px solid #1e293b; } .type-betonarme .door::after { width: 2px; height: 10px; background: #94a3b8; right: 2px; top: 40%; }
+        .type-ahsap .door { background: #451a03; border: 2px solid #290f02; background-image: repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px); } .type-ahsap .door::after { width: 3px; height: 3px; background: #fbbf24; border-radius: 50%; right: 2px; top: 50%; }
+        .type-yigma .door { background: #78350f; border: 2px solid #475569; border-radius: 8px 8px 0 0; box-shadow: 0 0 0 2.5px #334155, inset 0 0 6px rgba(0,0,0,0.5); margin-top: 2.5px; } .type-yigma .door::after { width: 3px; height: 6px; background: #1e293b; right: 2px; top: 50%; border-radius: 1px;}
 
-        /* ÇATI */
+        /* ÇATI (Kiremit dokusu render hatası çözüldü) */
         .roof-container { position: absolute; transform-style: preserve-3d; transition: all 0.4s ease; }
-        .roof-face {
-            position: absolute; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); border: 1px solid rgba(0,0,0,0.4);
-            box-sizing: border-box; background-image: linear-gradient(0deg, rgba(0,0,0,0.1) 10%, transparent 10%);
-            background-size: 100% 4px;
-        }
-        .r-front { transform-origin: bottom; }
-        .r-back { transform-origin: top; filter: brightness(0.7); }
-        .r-left { transform-origin: left; filter: brightness(0.85); }
-        .r-right { transform-origin: right; filter: brightness(1.1); }
+        .roof-face { position: absolute; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); border: 1px solid rgba(0,0,0,0.4); box-sizing: border-box; background-image: repeating-linear-gradient(to top, rgba(0,0,0,0.25) 0px, rgba(0,0,0,0.25) 1px, transparent 1px, transparent 5px); }
+        .r-front { transform-origin: bottom; } .r-back { transform-origin: top; filter: brightness(0.7); } .r-left { transform-origin: left; filter: brightness(0.85); } .r-right { transform-origin: right; filter: brightness(1.1); }
 
         /* İNSAN MODELİ */
         .human-wrapper { position: absolute; left: 0; top: 0; width: 4px; height: 2px; transform-style: preserve-3d; will-change: transform; z-index:50;}
@@ -264,55 +202,33 @@
         .limb::before { top: 100%; left: 0; width: 100%; transform-origin: top; transform: rotateX(-90deg); }
         .limb::after { top: 0; left: 100%; height: 100%; transform-origin: left; transform: rotateY(90deg); }
 
-        .leg-l { width: 1.5px; height: 2px; left: 0.25px; top: 0; background: #3b82f6; transform: translateZ(9px); }
-        .leg-l::before { height: 9px; background: #2563eb; } .leg-l::after { width: 9px; background: #1d4ed8; }
-        .leg-r { width: 1.5px; height: 2px; left: 2.25px; top: 0; background: #3b82f6; transform: translateZ(9px); }
-        .leg-r::before { height: 9px; background: #2563eb; } .leg-r::after { width: 9px; background: #1d4ed8; }
-        .torso { width: 4px; height: 2px; left: 0px; top: 0; background: #ef4444; transform: translateZ(15px); }
-        .torso::before { height: 6px; background: #dc2626; } .torso::after { width: 6px; background: #b91c1c; }
-        .arm-l { width: 1px; height: 2px; left: -1px; top: 0; background: #fca5a5; transform: translateZ(15px); }
-        .arm-l::before { height: 6px; background: #ef4444; } .arm-l::after { width: 6px; background: #dc2626; }
-        .arm-r { width: 1px; height: 2px; left: 4px; top: 0; background: #fca5a5; transform: translateZ(15px); }
-        .arm-r::before { height: 6px; background: #ef4444; } .arm-r::after { width: 6px; background: #dc2626; }
-        .head { width: 2.4px; height: 2.4px; left: 0.8px; top: -0.2px; background: #fde68a; transform: translateZ(18px); }
-        .head::before { height: 3px; background: #fcd34d; } .head::after { width: 3px; background: #fbbf24; }
+        .leg-l { width: 1.5px; height: 2px; left: 0.25px; top: 0; background: #3b82f6; transform: translateZ(9px); } .leg-l::before { height: 9px; background: #2563eb; } .leg-l::after { width: 9px; background: #1d4ed8; }
+        .leg-r { width: 1.5px; height: 2px; left: 2.25px; top: 0; background: #3b82f6; transform: translateZ(9px); } .leg-r::before { height: 9px; background: #2563eb; } .leg-r::after { width: 9px; background: #1d4ed8; }
+        .torso { width: 4px; height: 2px; left: 0px; top: 0; background: #ef4444; transform: translateZ(15px); } .torso::before { height: 6px; background: #dc2626; } .torso::after { width: 6px; background: #b91c1c; }
+        .arm-l { width: 1px; height: 2px; left: -1px; top: 0; background: #fca5a5; transform: translateZ(15px); } .arm-l::before { height: 6px; background: #ef4444; } .arm-l::after { width: 6px; background: #dc2626; }
+        .arm-r { width: 1px; height: 2px; left: 4px; top: 0; background: #fca5a5; transform: translateZ(15px); } .arm-r::before { height: 6px; background: #ef4444; } .arm-r::after { width: 6px; background: #dc2626; }
+        .head { width: 2.4px; height: 2.4px; left: 0.8px; top: -0.2px; background: #fde68a; transform: translateZ(18px); } .head::before { height: 3px; background: #fcd34d; } .head::after { width: 3px; background: #fbbf24; }
 
         @keyframes swing-leg { 0% { transform: translateZ(9px) rotateX(-30deg); } 100% { transform: translateZ(9px) rotateX(30deg); } }
         @keyframes swing-leg-opp { 0% { transform: translateZ(9px) rotateX(30deg); } 100% { transform: translateZ(9px) rotateX(-30deg); } }
         @keyframes swing-arm { 0% { transform: translateZ(15px) rotateX(-30deg); } 100% { transform: translateZ(15px) rotateX(30deg); } }
         @keyframes swing-arm-opp { 0% { transform: translateZ(15px) rotateX(30deg); } 100% { transform: translateZ(15px) rotateX(-30deg); } }
 
-        .walking .leg-l { animation: swing-leg 0.4s infinite alternate ease-in-out; }
-        .walking .leg-r { animation: swing-leg-opp 0.4s infinite alternate ease-in-out; }
-        .walking .arm-l { animation: swing-arm-opp 0.4s infinite alternate ease-in-out; }
-        .walking .arm-r { animation: swing-arm 0.4s infinite alternate ease-in-out; }
+        .walking .leg-l { animation: swing-leg 0.4s infinite alternate ease-in-out; } .walking .leg-r { animation: swing-leg-opp 0.4s infinite alternate ease-in-out; } .walking .arm-l { animation: swing-arm-opp 0.4s infinite alternate ease-in-out; } .walking .arm-r { animation: swing-arm 0.4s infinite alternate ease-in-out; }
 
         /* AKILLI ETİKET */
-        .scale-label {
-            position: absolute; left: 50%; top: 50%;
-            transform: translate(-50%, -50%) translateZ(20px) 
-                       rotateZ(calc(-1 * var(--cam-z))) rotateX(calc(-1 * var(--cam-x))) 
-                       translateY(45px) translateZ(40px) scale(var(--cam-inv-scale));
-            background: rgba(255, 255, 255, 0.95); color: #1f2937; padding: 4px 8px;
-            font-size: 11px; font-weight: bold; border-radius: 6px; white-space: nowrap;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid #cbd5e1; pointer-events: none;
-            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
+        .scale-label { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) translateZ(20px) rotateZ(calc(-1 * var(--cam-z))) rotateX(calc(-1 * var(--cam-x))) translateY(45px) translateZ(40px) scale(var(--cam-inv-scale)); background: rgba(255, 255, 255, 0.95); color: #1f2937; padding: 4px 8px; font-size: 11px; font-weight: bold; border-radius: 6px; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid #cbd5e1; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
         .tree-label::after { display: none !important; }
-        .scale-label::after {
-            content: ''; position: absolute; top: -6px; left: 50%; width: 2px; height: 6px; background-color: #94a3b8; transform: translateX(-50%);
-        }
+        .scale-label::after { content: ''; position: absolute; top: -6px; left: 50%; width: 2px; height: 6px; background-color: #94a3b8; transform: translateX(-50%); }
 
         /* ZEYTİN AĞACI (5 METRE) */
         .tree-wrapper { position: absolute; transform-style: preserve-3d; will-change: transform; z-index: 45; }
         .tree-trunk { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; transform-style: preserve-3d; }
         .tt-face { position: absolute; bottom: 0; width: 6px; height: 25px; background: #381c0e; transform-origin: bottom; }
-        .tt-1 { transform: rotateX(-90deg) rotateY(45deg); }
-        .tt-2 { transform: rotateX(-90deg) rotateY(-45deg); }
+        .tt-1 { transform: rotateX(-90deg) rotateY(45deg); } .tt-2 { transform: rotateX(-90deg) rotateY(-45deg); }
         .tree-canopy { position: absolute; left: -20px; top: -20px; width: 40px; height: 40px; transform-style: preserve-3d; transform: translateZ(30px) rotateX(90deg); }
         .canopy-part { position: absolute; top: 0; left: 0; width: 40px; height: 40px; background: #4d7c0f; border-radius: 50%; transform-origin: center center; opacity: 0.95; box-shadow: inset 0 0 15px rgba(0,0,0,0.6); border: 1px solid #3f6212; box-sizing: border-box; }
-        .cp-1 { transform: rotateY(0deg); } .cp-2 { transform: rotateY(45deg); }
-        .cp-3 { transform: rotateY(90deg); } .cp-4 { transform: rotateY(135deg); }
+        .cp-1 { transform: rotateY(0deg); } .cp-2 { transform: rotateY(45deg); } .cp-3 { transform: rotateY(90deg); } .cp-4 { transform: rotateY(135deg); }
         
         .human-wrapper:hover .scale-label, .tree-wrapper:hover .scale-label { opacity: 1; visibility: visible; }
         
@@ -324,72 +240,75 @@
 </head>
 <body>
     <div class="panel">
-        <h2>Şehir Planlama Kontrolü</h2>
+        <div class="panel-header">
+            <h2 id="mainTitle">TAKS-KAKS Mekansallaştırma Simülasyonu</h2>
+            <button id="btnLang" class="btn-lang">EN</button>
+        </div>
         
         <button id="btnPov" class="btn-pov">👁️ Karakterin Gözünden Gör</button>
 
-        <div class="info-box">
+        <div id="infoBox" class="info-box">
             💻 <strong>Kamera:</strong> Fareye basılı tutup bakın, <b>Ctrl+Tekerlek</b> ile zoom yapın.<br>
             🏃 <strong>Hareket:</strong> Yön tuşları veya <b>W,A,S,D</b> ile yürüyün.<br>
-            📏 <strong>Ölçü:</strong> Farenizi insanın üzerine getirin.
+            📏 <strong>Ölçü:</strong> Farenizi insanın veya ağacın üzerine getirin.
         </div>
 
         <div class="control-group" style="border:1px solid #e5e7eb; padding:10px; border-radius:8px; margin-top:5px; margin-bottom:5px;">
-            <div class="control-header" style="margin-bottom:5px;">Görünüm Ayarları</div>
+            <div id="txtGorunum" class="control-header" style="margin-bottom:5px;">Görünüm Ayarları</div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <label style="display:flex; align-items:center; gap:5px; font-size:0.8rem; font-weight:bold; cursor:pointer;">
-                    <input type="checkbox" id="t_windows" checked style="width:auto; transform:scale(1.1);"> Pencereler
+                    <input type="checkbox" id="t_windows" checked style="width:auto; transform:scale(1.1);"> <span id="lblWin">Pencereler</span>
                 </label>
                 <label style="display:flex; align-items:center; gap:5px; font-size:0.8rem; font-weight:bold; cursor:pointer;">
-                    <input type="checkbox" id="t_doors" checked style="width:auto; transform:scale(1.1);"> Kapılar
+                    <input type="checkbox" id="t_doors" checked style="width:auto; transform:scale(1.1);"> <span id="lblDoor">Kapılar</span>
                 </label>
                 <label style="display:flex; align-items:center; gap:5px; font-size:0.8rem; font-weight:bold; cursor:pointer;">
-                    <input type="checkbox" id="t_roofs" checked style="width:auto; transform:scale(1.1);"> Çatı
+                    <input type="checkbox" id="t_roofs" checked style="width:auto; transform:scale(1.1);"> <span id="lblRoof">Çatı</span>
                 </label>
                 <label style="display:flex; align-items:center; gap:5px; font-size:0.8rem; font-weight:bold; cursor:pointer;">
-                    <input type="checkbox" id="t_trees" checked style="width:auto; transform:scale(1.1);"> Ağaç
+                    <input type="checkbox" id="t_trees" checked style="width:auto; transform:scale(1.1);"> <span id="lblTree">Ağaç</span>
                 </label>
             </div>
         </div>
 
         <div class="control-group">
-            <div class="control-header"><label>Yapı Taşıyıcı Sistemi</label></div>
+            <div class="control-header"><label id="txtYapi">Yapı Taşıyıcı Sistemi</label></div>
             <select id="bType">
-                <option value="betonarme">Betonarme (Modern, Sınırsız Kat)</option>
-                <option value="yigma">Yığma Kagir (Klasik, Max 3 Kat)</option>
-                <option value="ahsap">Ahşap (Geleneksel, Max 2 Kat)</option>
+                <option id="optBeton" value="betonarme">Betonarme (Modern, Sınırsız Kat)</option>
+                <option id="optYigma" value="yigma">Yığma Kagir (Klasik, Max 3 Kat)</option>
+                <option id="optAhsap" value="ahsap">Ahşap (Geleneksel, Max 2 Kat)</option>
             </select>
         </div>
 
         <div class="control-group">
-            <div class="control-header"><label>Çatı Rengi</label></div>
+            <div class="control-header"><label id="txtCati">Çatı Rengi</label></div>
             <select id="roofColor">
-                <option value="#7f1d1d">Koyu Kiremit (Klasik)</option>
-                <option value="#334155">Antrasit Gri (Modern)</option>
+                <option id="optKiremit" value="#7f1d1d">Koyu Kiremit (Klasik)</option>
+                <option id="optAntrasit" value="#334155">Antrasit Gri (Modern)</option>
             </select>
         </div>
 
         <div class="control-group" style="margin-top: 5px;">
-            <div class="control-header"><label>Parsel Alanı (m²)</label><span id="parselVal">1000</span></div>
+            <div class="control-header"><label id="txtParsel">Parsel Alanı (m²)</label><span id="parselVal">1000</span></div>
             <input type="range" id="parsel" min="500" max="3000" step="100" value="1000">
         </div>
 
         <div class="control-group">
-            <div class="control-header"><label>TAKS (Taban Alanı Katsayısı)</label><span id="taksVal">0.15</span></div>
+            <div class="control-header"><label id="txtTaks">TAKS (Taban Alanı Katsayısı)</label><span id="taksVal">0.15</span></div>
             <input type="range" id="taks" min="0.05" max="1.00" step="0.05" value="0.15">
         </div>
 
         <div class="control-group">
-            <div class="control-header"><label>KAKS (Emsal / Toplam İnşaat)</label><span id="kaksVal">0.40</span></div>
+            <div class="control-header"><label id="txtKaks">KAKS (Emsal / Toplam İnşaat)</label><span id="kaksVal">0.40</span></div>
             <input type="range" id="kaks" min="0.05" max="5.00" step="0.05" value="0.40">
         </div>
 
         <div id="limitWarning" style="color: #ef4444; font-weight: bold; font-size: 0.75rem; margin-top: 5px; display: none;"></div>
 
         <div class="results">
-            <div class="result-item"><span>Hesaplanan Taban Alanı:</span><strong id="resTaban">400 m²</strong></div>
-            <div class="result-item"><span>Toplam İnşaat Alanı:</span><strong id="resToplam">1600 m²</strong></div>
-            <div class="result-item"><span>Mimari Kat Sayısı:</span><strong id="resKat">4 Kat</strong></div>
+            <div class="result-item"><span id="txtHesapTaban">Hesaplanan Taban Alanı:</span><strong id="resTaban">400 m²</strong></div>
+            <div class="result-item"><span id="txtHesapToplam">Toplam İnşaat Alanı:</span><strong id="resToplam">1600 m²</strong></div>
+            <div class="result-item"><span id="txtHesapKat">Mimari Kat Sayısı:</span><strong id="resKat">4 Kat</strong></div>
         </div>
     </div>
 
@@ -406,11 +325,11 @@
         </div>
 
         <div class="scene" id="sceneBox">
-            <div class="plot" id="plotArea">
+            <div class="plot" id="plotArea" data-label="Parsel Sınırı">
                 <div id="floorsContainer"></div>
                 
                 <div id="humanModel" class="human-wrapper">
-                    <div class="scale-label">1.80m (İnsan)</div> 
+                    <div id="lblHumanScale" class="scale-label">İnsan (1.80m)</div> 
                     <div class="human-hitbox"></div>
                     <div id="humanRotater" class="human-rotater">
                         <div class="limb leg-l"></div><div class="limb leg-r"></div>
@@ -423,6 +342,110 @@
     </div>
 
     <script>
+        // --- DİL YÖNETİMİ (TR / EN) ---
+        let currentLang = 'TR';
+        
+        const translations = {
+            'TR': {
+                mainTitle: "TAKS-KAKS Mekansallaştırma Simülasyonu",
+                btnLang: "EN",
+                povChar: "👁️ Karakterin Gözünden Gör",
+                povBird: "🚁 Kuşbakışı Kameraya Geç",
+                infoBox: "💻 <strong>Kamera:</strong> Fareye basılı tutup bakın, <b>Ctrl+Tekerlek</b> ile zoom yapın.<br>🏃 <strong>Hareket:</strong> Yön tuşları veya <b>W,A,S,D</b> ile yürüyün.<br>📏 <strong>Ölçü:</strong> Farenizi insanın veya ağacın üzerine getirin.",
+                txtGorunum: "Görünüm Ayarları",
+                lblWin: "Pencereler", lblDoor: "Kapılar", lblRoof: "Çatı", lblTree: "Ağaç",
+                txtYapi: "Yapı Taşıyıcı Sistemi",
+                optBeton: "Betonarme (Modern, Sınırsız Kat)",
+                optYigma: "Yığma Kagir (Klasik, Max 3 Kat)",
+                optAhsap: "Ahşap (Geleneksel, Max 2 Kat)",
+                txtCati: "Çatı Rengi",
+                optKiremit: "Koyu Kiremit (Klasik)",
+                optAntrasit: "Antrasit Gri (Modern)",
+                txtParsel: "Parsel Alanı (m²)",
+                txtTaks: "TAKS (Taban Alanı Katsayısı)",
+                txtKaks: "KAKS (Emsal / Toplam İnşaat)",
+                txtHesapTaban: "Hesaplanan Taban Alanı:",
+                txtHesapToplam: "Toplam İnşaat Alanı:",
+                txtHesapKat: "Mimari Kat Sayısı:",
+                lblHumanScale: "İnsan (1.80m)",
+                treeText: "Ağaç (5m)",
+                floorText: "Kat",
+                warnTimber: "Ahşap",
+                warnMasonry: "Yığma Kagir",
+                warnMsg: "⚠️ İmar Yönetmeliği gereği {TYPE} binalar en fazla {MAX} katlı olabilir! KAKS düzeltildi.",
+                plotLabel: "Parsel Sınırı"
+            },
+            'EN': {
+                mainTitle: "Spatializing BCR-FAR Simulator",
+                btnLang: "TR",
+                povChar: "👁️ First-Person View",
+                povBird: "🚁 Bird's-Eye View",
+                infoBox: "💻 <strong>Camera:</strong> Click & drag to look, <b>Ctrl+Scroll</b> to zoom.<br>🏃 <strong>Move:</strong> Arrow keys or <b>W,A,S,D</b>.<br>📏 <strong>Scale:</strong> Hover over the human or tree figure.",
+                txtGorunum: "Visibility Settings",
+                lblWin: "Windows", lblDoor: "Doors", lblRoof: "Roof", lblTree: "Tree",
+                txtYapi: "Structural System",
+                optBeton: "Reinforced Concrete (Modern, No limit)",
+                optYigma: "Masonry (Classic, Max 3 floors)",
+                optAhsap: "Timber (Traditional, Max 2 floors)",
+                txtCati: "Roof Color",
+                optKiremit: "Dark Terracotta (Classic)",
+                optAntrasit: "Anthracite Grey (Modern)",
+                txtParsel: "Plot Area (m²)",
+                txtTaks: "BCR (Building Coverage Ratio)",
+                txtKaks: "FAR (Floor Area Ratio)",
+                txtHesapTaban: "Calculated Footprint:",
+                txtHesapToplam: "Total Floor Area:",
+                txtHesapKat: "Number of Floors:",
+                lblHumanScale: "Human (1.80m)",
+                treeText: "Tree (5m)",
+                floorText: "Floors",
+                warnTimber: "Timber",
+                warnMasonry: "Masonry",
+                warnMsg: "⚠️ Per zoning regulations, {TYPE} buildings can have a maximum of {MAX} floors! FAR adjusted.",
+                plotLabel: "Plot Boundary"
+            }
+        };
+
+        const btnLang = document.getElementById('btnLang');
+        btnLang.addEventListener('click', () => {
+            currentLang = currentLang === 'TR' ? 'EN' : 'TR';
+            updateLanguage();
+            updateSimulation(); 
+        });
+
+        function updateLanguage() {
+            const t = translations[currentLang];
+            document.getElementById('mainTitle').innerText = t.mainTitle;
+            document.getElementById('btnLang').innerText = t.btnLang;
+            document.getElementById('infoBox').innerHTML = t.infoBox;
+            document.getElementById('txtGorunum').innerText = t.txtGorunum;
+            document.getElementById('lblWin').innerText = t.lblWin;
+            document.getElementById('lblDoor').innerText = t.lblDoor;
+            document.getElementById('lblRoof').innerText = t.lblRoof;
+            document.getElementById('lblTree').innerText = t.lblTree;
+            document.getElementById('txtYapi').innerText = t.txtYapi;
+            document.getElementById('optBeton').innerText = t.optBeton;
+            document.getElementById('optYigma').innerText = t.optYigma;
+            document.getElementById('optAhsap').innerText = t.optAhsap;
+            document.getElementById('txtCati').innerText = t.txtCati;
+            document.getElementById('optKiremit').innerText = t.optKiremit;
+            document.getElementById('optAntrasit').innerText = t.optAntrasit;
+            document.getElementById('txtParsel').innerText = t.txtParsel;
+            document.getElementById('txtTaks').innerText = t.txtTaks;
+            document.getElementById('txtKaks').innerText = t.txtKaks;
+            document.getElementById('txtHesapTaban').innerText = t.txtHesapTaban;
+            document.getElementById('txtHesapToplam').innerText = t.txtHesapToplam;
+            document.getElementById('txtHesapKat').innerText = t.txtHesapKat;
+            document.getElementById('lblHumanScale').innerText = t.lblHumanScale;
+            document.getElementById('plotArea').setAttribute('data-label', t.plotLabel);
+            
+            if (isPOV) {
+                btnPov.innerHTML = t.povBird;
+            } else {
+                btnPov.innerHTML = t.povChar;
+            }
+        }
+
         const parselSlider = document.getElementById('parsel');
         const taksSlider = document.getElementById('taks');
         const kaksSlider = document.getElementById('kaks');
@@ -466,14 +489,14 @@
         btnPov.addEventListener('click', () => {
             isPOV = !isPOV;
             if (isPOV) {
-                btnPov.innerHTML = '🚁 Kuşbakışı Kameraya Geç';
+                btnPov.innerHTML = translations[currentLang].povBird;
                 btnPov.classList.add('active');
                 crosshair.style.display = 'block';
                 humanModel.style.display = 'none'; 
                 camX = 90; 
                 viewArea.style.perspective = '600px'; 
             } else {
-                btnPov.innerHTML = '👁️ Karakterin Gözünden Gör';
+                btnPov.innerHTML = translations[currentLang].povChar;
                 btnPov.classList.remove('active');
                 crosshair.style.display = 'none';
                 humanModel.style.display = 'block';
@@ -554,33 +577,24 @@
             if (c === 'ArrowRight' || c === 'KeyD') keys.d = false;
         });
 
-        // --- YENİ MOBİL D-PAD KONTROLLERİ (POINTER EVENTS İLE TİTREMEYİ ENGELLER) ---
+        // --- YENİ MOBİL D-PAD KONTROLLERİ ---
         const dpadMap = { 'btnW': 'w', 'btnA': 'a', 'btnS': 's', 'btnD': 'd' };
-
         for (let btnId in dpadMap) {
             let btn = document.getElementById(btnId);
             if (!btn) continue;
             let keyName = dpadMap[btnId];
 
             btn.addEventListener('pointerdown', function(e) {
-                e.preventDefault(); 
-                e.stopPropagation(); 
-                btn.setPointerCapture(e.pointerId); // Parmağın butondan kayması durumunda bile izlemeyi sürdürür
+                e.preventDefault(); e.stopPropagation(); 
+                btn.setPointerCapture(e.pointerId); 
                 keys[keyName] = true;
             });
-
             btn.addEventListener('pointerup', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 btn.releasePointerCapture(e.pointerId);
                 keys[keyName] = false;
             });
-
-            btn.addEventListener('pointercancel', function(e) {
-                keys[keyName] = false;
-            });
-            
-            // Uzun basmada beliren metin menüsünü kapatır
+            btn.addEventListener('pointercancel', function(e) { keys[keyName] = false; });
             btn.addEventListener('contextmenu', e => e.preventDefault());
         }
 
@@ -606,24 +620,16 @@
                 if (newY < 0) newY = 0;
                 if (newY > currentPlotSidePx - 2) newY = currentPlotSidePx - 2;
 
-                let bLeft = currentBuildingOffsetPx;
-                let bRight = currentBuildingOffsetPx + currentBuildingSidePx;
-                let bTop = currentBuildingOffsetPx;
-                let bBottom = currentBuildingOffsetPx + currentBuildingSidePx;
+                let bLeft = currentBuildingOffsetPx; let bRight = currentBuildingOffsetPx + currentBuildingSidePx;
+                let bTop = currentBuildingOffsetPx; let bBottom = currentBuildingOffsetPx + currentBuildingSidePx;
                 let hRadius = 3; 
 
-                let hitBuilding = (x, y) => {
-                    return (x + hRadius > bLeft && x - hRadius < bRight &&
-                            y + hRadius > bTop && y - hRadius < bBottom);
-                };
-                let hitTree = (x, y) => {
-                    return Math.hypot(x - currentTreeX, y - currentTreeY) < (hRadius + 2); 
-                };
+                let hitBuilding = (x, y) => { return (x + hRadius > bLeft && x - hRadius < bRight && y + hRadius > bTop && y - hRadius < bBottom); };
+                let hitTree = (x, y) => { return Math.hypot(x - currentTreeX, y - currentTreeY) < (hRadius + 2); };
 
                 if (!hitBuilding(newX, humanY) && !hitTree(newX, humanY)) { humanX = newX; }
                 if (!hitBuilding(humanX, newY) && !hitTree(humanX, newY)) { humanY = newY; }
                 
-                // JITTER (TİTREME) ÇÖZÜMÜ: Konumlama için Math.round (tam sayı) yerine .toFixed(2) akıcı değerlerini kullandık.
                 humanModel.style.transform = `translate3d(${humanX.toFixed(2)}px, ${humanY.toFixed(2)}px, 0)`;
                 
                 let targetAngle = Math.atan2(moveY, moveX) * 180 / Math.PI;
@@ -638,7 +644,6 @@
             sceneBox.style.setProperty('--cam-z', camZ + 'deg');
 
             if (isPOV) {
-                // Kamera Titremesini (Jitter) önlemek için burada da Math.round kaldırıldı.
                 let cx = humanX - currentPlotSidePx / 2;
                 let cy = humanY - currentPlotSidePx / 2;
                 sceneBox.style.transform = `translateZ(590px) rotateX(${camX}deg) rotateZ(${camZ}deg) translate3d(${-cx.toFixed(2)}px, ${-cy.toFixed(2)}px, -18px)`;
@@ -651,6 +656,7 @@
 
         // --- BİNA SİMÜLASYONU ---
         function updateSimulation() {
+            const t = translations[currentLang];
             let bType = bTypeSelect.value;
             let roofColor = roofColorSelect.value;
             
@@ -669,23 +675,26 @@
                 katSayisi = maxKat;
                 kaks = taks * maxKat; 
                 kaksSlider.value = kaks.toFixed(2);
-                document.getElementById('limitWarning').innerText = `⚠️ İmar Yönetmeliği gereği ${bType === 'ahsap' ? 'Ahşap' : 'Yığma Kagir'} binalar en fazla ${maxKat} katlı olabilir! KAKS düzeltildi.`;
+                let typeName = bType === 'ahsap' ? t.warnTimber : t.warnMasonry;
+                document.getElementById('limitWarning').innerText = t.warnMsg.replace('{TYPE}', typeName).replace('{MAX}', maxKat);
                 document.getElementById('limitWarning').style.display = 'block';
             } else {
                 document.getElementById('limitWarning').style.display = 'none';
                 if (kaks < taks) { kaks = taks; kaksSlider.value = taks.toFixed(2); katSayisi = 1;}
             }
 
+            let tabanAlani = parsel * taks;
+            let toplamInsaat = parsel * kaks;
+
             document.getElementById('parselVal').innerText = parsel;
             document.getElementById('taksVal').innerText = taks.toFixed(2);
             document.getElementById('kaksVal').innerText = kaks.toFixed(2);
 
-            let tabanAlani = parsel * taks;
-            let toplamInsaat = parsel * kaks;
-
             document.getElementById('resTaban').innerText = tabanAlani.toFixed(0) + " m²";
             document.getElementById('resToplam').innerText = toplamInsaat.toFixed(0) + " m²";
-            document.getElementById('resKat').innerText = katSayisi + " Kat";
+            
+            let floorText = katSayisi + (currentLang === 'TR' ? " Kat" : " Floors");
+            document.getElementById('resKat').innerText = floorText;
 
             floorsContainer.innerHTML = ''; 
 
@@ -764,10 +773,7 @@
             let treeDistPx = 40; 
             currentTreeX = offsetPx + buildingSizePx + treeDistPx; 
             currentTreeY = offsetPx + buildingSizePx - 10;
-            
-            if (currentTreeX > currentPlotSidePx - 15) {
-                currentTreeX = currentPlotSidePx - 20;
-            }
+            if (currentTreeX > currentPlotSidePx - 15) { currentTreeX = currentPlotSidePx - 20; }
 
             let treeDiv = document.createElement('div');
             treeDiv.className = 'tree-wrapper';
@@ -775,7 +781,7 @@
             treeDiv.style.top = currentTreeY + 'px';
             
             treeDiv.innerHTML = `
-                <div class="scale-label tree-label" style="transform: translate(-50%, -50%) translateZ(55px) rotateZ(calc(-1 * var(--cam-z))) rotateX(calc(-1 * var(--cam-x))) translateY(-20px) scale(var(--cam-inv-scale));">Ağaç 5 m</div> 
+                <div class="scale-label tree-label" style="transform: translate(-50%, -50%) translateZ(55px) rotateZ(calc(-1 * var(--cam-z))) rotateX(calc(-1 * var(--cam-x))) translateY(-20px) scale(var(--cam-inv-scale));">${t.treeText}</div> 
                 <div class="human-hitbox" style="width:40px; height:40px; left:-20px; top:-20px; transform:translateZ(25px);"></div>
                 <div class="tree-trunk">
                     <div class="tt-face tt-1"></div><div class="tt-face tt-2"></div>
@@ -788,8 +794,7 @@
             floorsContainer.appendChild(treeDiv);
             
             if (isFirstLoad) {
-                humanX = currentPlotSidePx / 2;
-                humanY = currentPlotSidePx - 15; 
+                humanX = currentPlotSidePx / 2; humanY = currentPlotSidePx - 15; 
                 humanModel.style.transform = `translate3d(${humanX.toFixed(2)}px, ${humanY.toFixed(2)}px, 0)`;
                 isFirstLoad = false;
             }
@@ -803,6 +808,7 @@
 
         sceneBox.style.setProperty('--cam-scale', camScale);
         sceneBox.style.setProperty('--cam-inv-scale', 1 / camScale);
+        updateLanguage(); 
         updateSimulation();
         requestAnimationFrame(gameLoop);
     </script>
